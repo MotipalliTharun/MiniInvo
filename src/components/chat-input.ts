@@ -148,3 +148,4 @@ export class ChatInput extends LitElement {
 }
 
 customElements.define("chat-input", ChatInput);
+  
