@@ -1,46 +1,72 @@
-// BEFORE
-// export const theme = ` ... `;
-
-// AFTER
 import { css } from "lit";
 
 export const theme = css`
-  :host, :root {
-    --bg: #0b1020;
-    --panel: #121832;
-    --panel-2: #11192e;
-    --text: #e6e9f5;
-    --muted: #9aa4bf;
-    --primary: #7cc6ff;
-    --accent: #90a0ff;
-    --danger: #ff6b6b;
+  :host,
+  :root {
+    /* 🌈 Brand Palette */
+    --bg: #fafbfd;               /* overall background */
+    --panel: #ffffff;            /* main panel background */
+    --panel-2: #f8fafc;          /* secondary card tone */
+    --text: #1e293b;             /* primary text */
+    --muted: #6b7280;            /* secondary text */
+    --primary: #00bcd4;          /* aqua accent */
+    --accent: #00acc1;           /* slightly darker accent */
+    --danger: #ef4444;           /* bright red for alerts */
 
+    /* 🧩 Layout & Depth */
     --radius: 16px;
-    --shadow: 0 10px 30px rgba(0,0,0,.35);
-    --border: 1px solid rgba(255,255,255,.06);
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    --border: 1px solid #e5e7eb;
   }
 
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+  }
 
-  html, body {
+  html,
+  body {
     height: 100%;
     margin: 0;
-    background: radial-gradient(1200px 800px at 80% -20%, #1a2350 0%, transparent 60%) var(--bg);
+    background: linear-gradient(180deg, #f3faff 0%, #ffffff 100%);
     color: var(--text);
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
   .card {
-    background: linear-gradient(180deg, #141b36 0%, #0f1530 100%);
+    background: var(--panel);
     border: var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
   }
 
   .glow {
-    box-shadow: 0 0 40px #7cc6ff33, inset 0 0 0 1px #7cc6ff22;
+    box-shadow: 0 0 25px rgba(0, 188, 212, 0.25),
+                inset 0 0 0 1px rgba(0, 188, 212, 0.15);
   }
 
-  .row { display:flex; gap:.75rem; align-items:center; }
-  .col { display:flex; flex-direction:column; gap:.75rem; }
+  .row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Buttons, links, etc. */
+  a,
+  button {
+    color: var(--primary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  a:hover,
+  button:hover {
+    color: var(--accent);
+  }
 `;

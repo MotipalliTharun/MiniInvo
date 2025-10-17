@@ -1,0 +1,40 @@
+:root {
+  /* 🌈 Brand Accent (soft aqua blue) */
+  --brand:        #00bcd4;    /* Light aqua / cyan */
+  --brand-600:    #00acc1;
+  --brand-700:    #0097a7;
+
+  /* ☁️ Surface & Layout */
+  --bg:           #fafbfd;    /* clean light background */
+  --panel:        #ffffff;    /* white cards/panels */
+  --border:       #e5e7eb;    /* subtle divider lines */
+  --muted:        #6b7280;    /* secondary text */
+  --text:         #1e293b;    /* main text (slate blue-gray) */
+
+  /* ✅ Feedback & Utility */
+  --ok:           #16a34a;    /* green success */
+  --warn:         #f59e0b;    /* amber warning */
+  --err:          #dc2626;    /* red error */
+
+  /* ☁️ Shadows (soft, not dark) */
+  --elev-1: 0 2px 6px rgba(0, 0, 0, 0.04);
+  --elev-2: 0 8px 20px rgba(0, 0, 0, 0.06);
+
+  /* 🧩 Radius & spacing */
+  --r-xs: 0.375rem;
+  --r-md: 0.75rem;
+  --r-lg: 1rem;
+  --gap-1: 0.5rem;
+  --gap-2: 0.75rem;
+  --gap-3: 1rem;
+  --gap-4: 1.25rem;
+
+  /* ✨ Font */
+  font-family: "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
+}
+
+/* No dark mode — always bright */
+body {
+  background: var(--bg);
+  color: var(--text);
+}

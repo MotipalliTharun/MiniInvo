@@ -1,42 +1,52 @@
-import { supabase } from './supabaseClient';
-import type { ReactiveController, ReactiveControllerHost } from 'lit';
+import { supabase } from "./supabaseClient";
 
-export type SessionUser = { id: string; email: string | null } | null;
+export type Role = "pending" | "viewer" | "author" | "editor" | "admin";
+export type SessionUser = { id: string; email: string | null; role: Role } | null;
 
-export class AuthController implements ReactiveController {
-  host: ReactiveControllerHost;
+class Store {
   user: SessionUser = null;
   ready = false;
-  unsubscribe?: () => void;
+  listeners = new Set<() => void>();
 
-  constructor(host: ReactiveControllerHost) {
-    (this.host = host).addController(this);
-  }
-
-  async hostConnected() {
-    await this.refresh();
-    const { data: sub } = supabase.auth.onAuthStateChange(async () => {
-      await this.refresh();
-    });
-    this.unsubscribe = () => sub.subscription.unsubscribe();
-  }
-
-  hostDisconnected() {
-    this.unsubscribe?.();
-  }
+  on(cb: () => void) { this.listeners.add(cb); return () => this.listeners.delete(cb); }
+  emit() { for (const cb of this.listeners) cb(); }
 
   async refresh() {
     const { data, error } = await supabase.auth.getUser();
-    this.user = error
-      ? null
-      : (data.user
-          ? { id: data.user.id, email: data.user.email ?? null } // ✅ fix here
-          : null);
+    if (error || !data.user) {
+      this.user = null;
+      this.ready = true;
+      this.emit();
+      return;
+    }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role,email")
+      .eq("id", data.user.id)
+      .single();
+
+    this.user = {
+      id: data.user.id,
+      email: profile?.email ?? data.user.email ?? null,
+      role: (profile?.role ?? "pending") as Role,
+    };
     this.ready = true;
-    this.host.requestUpdate();
+    this.emit();
   }
 
-  async logout() {
-    await supabase.auth.signOut();
+  initOnce() {
+    if ((window as any).__auth_inited) return;
+    (window as any).__auth_inited = true;
+
+    // initial read
+    this.refresh();
+
+    // live updates
+    supabase.auth.onAuthStateChange((_ev, _session) => {
+      this.refresh();
+    });
   }
 }
+
+export const authStore = new Store();
+authStore.initOnce();
