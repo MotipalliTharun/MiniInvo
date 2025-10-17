@@ -59,7 +59,7 @@ export class TopNav extends LitElement {
     return html`
       <header>
         <div class="bar">
-          <div class="brand">Inventory Blog</div>
+          <div class="brand">Clues Stack AI</div>
 
           <nav aria-label="Primary">
             <button class="link" aria-current=${this.view==="home"?"page":"false"} @click=${() => this.go("home")}>Home</button>

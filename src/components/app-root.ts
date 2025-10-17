@@ -391,7 +391,7 @@ export class AppRoot extends LitElement {
           : this.view === "admin"     ? this.renderAdmin()
           : this.view === "assistant" ? this.renderAssistant()
           : this.view === "inventory" ? (this.authed ? this.renderInventory() : this.renderHome())
-          : this.renderAccount()}a
+          : this.renderAccount()}
         </main>
       </div>
 
