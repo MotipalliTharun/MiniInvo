@@ -59,15 +59,17 @@ export class TopNav extends LitElement {
     return html`
       <header>
         <div class="bar">
-          <div class="brand">Clues Stack AI</div>
+          <div class="brand">Clues Stack AI </div>
 
           <nav aria-label="Primary">
-            <button class="link" aria-current=${this.view==="home"?"page":"false"} @click=${() => this.go("home")}>Home</button>
-            <button class="link" aria-current=${this.view==="blog"?"page":"false"} @click=${() => this.go("blog")}>Blog</button>
-            <button class="link" aria-current=${this.view==="contact"?"page":"false"} @click=${() => this.go("contact")}>Contact</button>
-            ${this.authed ? html`
-              <button class="link" aria-current=${this.view==="profile"?"page":"false"} @click=${() => this.go("profile")}>User details</button>
-            `: null}
+<button class="link" aria-current=${this.view==="home"?"page":"false"} @click=${() => this.go("home")}>Home</button>
+<button class="link" aria-current=${this.view==="blog"?"page":"false"} @click=${() => this.go("blog")}>Blog</button>
+<button class="link" aria-current=${this.view==="about"?"page":"false"} @click=${() => this.go("about")}>About</button>
+<button class="link" aria-current=${this.view==="contact"?"page":"false"} @click=${() => this.go("contact")}>Contact</button>
+${this.authed ? html`
+  <button class="link" aria-current=${this.view==="profile"?"page":"false"} @click=${() => this.go("profile")}>User details</button>
+`: null}
+
           </nav>
 
           <div class="right">

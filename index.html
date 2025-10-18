@@ -2,15 +2,76 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- Responsive + Apple Safe Area -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <title>MiNi InVo</title>
+
+    <!-- Primary Metadata -->
+    <title>Clues Stack  — Smarter Inventory & Insights</title>
+    <meta
+      name="description"
+      content="Clues Stack  helps businesses manage inventory, analyze trends, and make smarter decisions — all in one intuitive dashboard."
+    />
+    <meta name="theme-color" content="#ffffff" />
+
+    <!-- Favicon -->
     <link rel="icon" href="/favicon.svg" />
-    <meta name="theme-color" content="#0b1020" />
+
+    <!-- Open Graph (Facebook, LinkedIn) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Clues Stack  — Smarter Inventory & Insights" />
+    <meta
+      property="og:description"
+      content="Track, analyze, and optimize your inventory performance with Clues Stack  — a modern AI-driven dashboard built for clarity and speed."
+    />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:url" content="https://miniinvo.com/" />
+    <meta property="og:site_name" content="Clues Stack " />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Clues Stack  — Smarter Inventory & Insights" />
+    <meta
+      name="twitter:description"
+      content="AI-driven inventory dashboard for businesses of any size."
+    />
+    <meta name="twitter:image" content="/og-image.jpg" />
+
+    <!-- Google Search Console Verification -->
+    <meta name="google-site-verification" content="YOUR_SEARCH_CONSOLE_TOKEN" />
+
+    <!-- PWA Manifest (optional if you plan to make it installable) -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-XXXXXXXXXX", { anonymize_ip: true });
+    </script>
+
+    <!-- Fonts (optional) -->
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
   </head>
-  <body>
+
+  <body style="margin:0; background-color:#f6f8fb; color:#0f172a;">
     <app-root></app-root>
     <script type="module" src="/src/main.ts"></script>
   </body>
