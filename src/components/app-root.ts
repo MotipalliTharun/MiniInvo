@@ -1,154 +1,160 @@
+// src/components/app-root.ts
 import { LitElement, css, html } from "lit";
 import { theme } from "../styles/theme.css";
-
-/* Existing app bits */
-import "./inventory-app";
-import "../components/message-bubble";
-import "../components/chat-input";
 import { chatStore, type ChatMessage } from "../state/chat";
 
-/* Auth store */
 import { authStore } from "../lib/authStore";
+import type { Role } from "../lib/authStore";
 
-/* Shared UI + pages */
+/* Nav + layout */
 import "../components/top-nav";
-import "../components/side-nav";
 import "../components/toast-center";
-import "../components/user-badge";
-import "../components/landing-page";
+import "../components/site-footer";
 
-/* Blog SaaS components */
+/* Landing & pages */
+import "../components/landing-cluesstack-pro";
+import "../components/about-page";
+import "../components/contact-form";
 import "../components/blog-list";
-import "../components/post-editor";
-import "../components/admin-users";
-import "../components/auth-guard";
 
-/* Auth forms + logout */
+/* Community */
+import "../components/community-hub";
+
+/* Workflows (uncommented because you use them) */
+// import "../components/workflow-list";
+// import "../components/workflow-builder";
+
+/* Auth */
 import "../components/login-form";
 import "../components/signup-form";
 import "../components/logout-button";
 
 type View =
   | "home"
-  | "blog"
+  | "community"
+  | "templates"
+  | "about"
+  | "services"
   | "contact"
+  | "account"
+  | "workflows"
+  | "workflow-new"
+  | "workflow-edit"
   | "profile"
-  | "write"
-  | "admin"
-  | "assistant"
-  | "inventory"
-  | "account";
+  | "assistant";
 
 type AccountView = "login" | "signup";
 
 export class AppRoot extends LitElement {
   static properties = {
     view: { state: true },
-    messages: { state: true },
-    ready: { state: true },
     authed: { state: true },
+    ready: { state: true },
     role: { state: true },
     email: { state: true },
+    messages: { state: true },
     accountView: { state: true },
-    navOpen: { state: true },
+    editingWorkflowId: { state: true },
   } as const;
 
+  // Routing / state
   view: View = (localStorage.getItem("view") as View) || "home";
-  messages: ChatMessage[] = chatStore.messages;
-
-  ready = false;
   authed = false;
-  role: "pending" | "viewer" | "author" | "editor" | "admin" | null = null;
+  ready = false;
+  role: Role | null = null;
   email: string | null = null;
 
   accountView: AccountView = "login";
-  navOpen = localStorage.getItem("navOpen") !== "false"; // default open
+  editingWorkflowId: string | null = null;
+
+  messages: ChatMessage[] = chatStore.messages;
+
+  private _offAuth?: () => void;
 
   static styles = [
     theme,
     css`
       :host {
-        display: block; min-height: 100vh;
-        color: var(--text, #1e293b); background: var(--bg, #fafbfd);
-        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+        display: block;
+        min-height: 100vh;
+        color: #0f172a;
+        background: #f6f8fb;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          "Apple Color Emoji", "Segoe UI Emoji";
       }
-
-      .shell { display: grid; grid-template-columns: 240px 1fr; gap: 1rem; padding: 1rem; }
-      .shell.no-nav { grid-template-columns: 1fr; }
-      @media (max-width: 980px) { .shell { grid-template-columns: 1fr; } }
-
-      main {
-        min-height: calc(100vh - 160px);
-        display: grid; grid-template-rows: 1fr auto; gap: 1rem;
+      .shell {
+        padding: 1rem;
+        max-width: 1120px;
+        margin: 0 auto;
       }
-
       .panel {
-        overflow: auto; padding: 1.2rem; border-radius: 16px;
-        background: #fff; border: 1px solid #f1f3f5; box-shadow: 0 2px 6px rgba(0,0,0,.04);
+        overflow: auto;
+        padding: 1.2rem;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid #f1f3f5;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
       }
-      .card { padding: 1rem; border: 1px solid #f1f3f5; border-radius: 12px; background: #fff; }
-      .stack { display:flex; flex-direction:column; gap:.8rem; }
-      footer { position: sticky; bottom: 0; background: transparent; }
-
+      .grid {
+        display: grid;
+        gap: 1rem;
+      }
       .account-grid {
-        display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       }
-
-      .drawer { display: none; }
-      @media (max-width: 980px) { .drawer { display: block; } }
-      .drawer.hidden { display: none; }
-      .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.2); backdrop-filter: blur(2px); z-index: 30; }
-      .drawer-panel {
-        position: fixed; z-index: 31; top: 0; bottom: 0; left: 0;
-        width: 78vw; max-width: 320px; background: #fff; border-right: 1px solid #f1f3f5; box-shadow: 0 14px 40px rgba(0,0,0,0.12);
-        padding: .6rem;
+      .card {
+        padding: 1rem;
+        border: 1px solid #eef2f6;
+        border-radius: 12px;
+        background: #fff;
       }
-      aside.desktop { position: sticky; top: 1rem; height: calc(100vh - 2rem); }
+      .muted {
+        color: #64748b;
+      }
+      .btn {
+        appearance: none;
+        border: 1px solid #00acc1;
+        background: #00bcd4;
+        color: #fff;
+        padding: 0.8rem 1rem;
+        border-radius: 12px;
+        font-weight: 900;
+        cursor: pointer;
+      }
     `,
   ];
 
-  connectedCallback() {
+  connectedCallback(): void {
     super.connectedCallback();
     this.syncAuth();
-    authStore.on(() => this.syncAuth());
-
-    this._keydown = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "m" && this.authed) this.toggleNav();
-    };
-    window.addEventListener("keydown", this._keydown);
+    // subscribe; keep an unsubscribe to avoid leaks on HMR / disconnect
+    this._offAuth = authStore.on(() => this.syncAuth());
   }
+
   disconnectedCallback(): void {
+    this._offAuth?.();
     super.disconnectedCallback();
-    window.removeEventListener("keydown", this._keydown);
-  }
-  private _keydown!: (e: KeyboardEvent) => void;
-
-  private toast(text: string, tone: "ok" | "err" | "info" = "info") {
-    (this.renderRoot.querySelector("toast-center") as any)?.show?.(text, tone);
   }
 
   private syncAuth() {
-    // pull from authStore
-    // @ts-ignore
-    this.ready = authStore.ready ?? true;
-    // @ts-ignore
-    const u = authStore.user ?? null;
+    this.ready = (authStore as any).ready ?? true;
+    const u = (authStore as any).user ?? null;
+
     this.authed = !!u;
-    this.role = u?.role ?? null;
+    this.role = (u?.role as Role) ?? "pending";
     this.email = u?.email ?? null;
 
-    if (!this.authed) {
-      this.navOpen = false;
-      localStorage.setItem("navOpen", "false");
-    } else if (localStorage.getItem("navOpen") === null) {
-      this.navOpen = true;
-    }
-
-    if (this.ready) {
-      if (this.authed && this.view === "home") this.setView("blog");
-      if (!this.authed && ["write","admin","inventory","assistant","profile"].includes(this.view)) {
-        this.setView("home");
-      }
+    // Gate private routes
+    if (
+      !this.authed &&
+      ["workflows", "workflow-new", "workflow-edit", "profile"].includes(
+        this.view
+      )
+    ) {
+      this.setView("account");
+      this.accountView = "login";
     }
     this.requestUpdate();
   }
@@ -157,246 +163,246 @@ export class AppRoot extends LitElement {
     if (this.view !== v) {
       this.view = v;
       localStorage.setItem("view", v);
-      if (window.matchMedia("(max-width: 980px)").matches) this.closeNav();
+      this.requestUpdate();
     }
   }
 
-  private toggleNav() { if (this.authed) { this.navOpen = !this.navOpen; localStorage.setItem("navOpen", String(this.navOpen)); } }
-  private closeNav()  { this.navOpen = false; localStorage.setItem("navOpen", "false"); }
-
-  private addUserText(text: string) {
-    chatStore.add("user", text);
-    this.messages = [...chatStore.messages];
-    setTimeout(() => {
-      chatStore.add("assistant", `You said: “${text}”. Hook this to your backend to stream real responses.`);
-      this.messages = [...chatStore.messages];
-    }, 300);
-  }
-
-  /* NAV + LOGOUT INTERACTIVITY */
-  private onNavigate(e: CustomEvent<{ view: View }>) { this.setView(e.detail.view); }
-  private onSignout() { this.handleLoggedOut(); }
-
-  private handleLoggedOut() {
-    this.authed = false;
-    this.role = null;
-    this.email = null;
-    this.setView("home");
-    this.closeNav();
-    this.toast("Signed out successfully", "info");
-    this.requestUpdate();
-  }
-
-  /* Views */
+  /* ---------- Views ---------- */
 
   private renderHome() {
     return html`
-      <section class="panel card">
-        <landing-page
+      <div class="panel">
+        <landing-cluesstack-pro
           .authed=${this.authed}
-          @go-account=${() => { this.accountView = "login"; this.setView("account"); }}
-          @go-dashboard=${() => this.setView("blog")}
-        ></landing-page>
-      </section>
+          @go=${(e: CustomEvent) => this.setView(e.detail.view as View)}
+        ></landing-cluesstack-pro>
+    </div>`;
+  }
+
+  private renderCommunity() {
+    return html`
+      <div class="panel">
+        <community-hub .user=${(authStore as any).user}></community-hub>
+      </div>
     `;
   }
 
-  private renderBlog() {
+  private renderTemplates() {
     return html`
-      <section class="panel card">
-        <h3 style="margin:0 0 .5rem 0;">Latest posts</h3>
-        <blog-list></blog-list>
-      </section>
+      <div class="panel grid">
+        <h3 style="margin:0">Templates</h3>
+        <div class="card">Gmail → Slack incident alert</div>
+        <div class="card">Typeform → Google Sheets append</div>
+        <div class="card">CRON → Email weekly digest</div>
+        <button
+          class="btn"
+          @click=${() => this.setView(this.authed ? "workflow-new" : "account")}
+        >
+          Use a template
+        </button>
+      </div>
+    `;
+  }
+
+  private renderAbout() {
+    return html`
+      <div class="panel">
+        <about-page
+          brand="Cluesstack"
+          mission="Make automation accessible and legible with Clues & Stack — guided hints and stackable actions that help teams get repeatable results fast."
+        ></about-page>
+      </div>
+    `;
+  }
+
+  private renderServices() {
+    return html`
+      <div class="panel grid">
+        <h3 style="margin:0">Services</h3>
+        <div class="card">
+          <strong>Starter</strong>
+          <div class="muted">Individuals. 2 workflows, 100 runs/mo.</div>
+        </div>
+        <div class="card">
+          <strong>Team</strong>
+          <div class="muted">10 workflows, role-based access.</div>
+        </div>
+        <div class="card">
+          <strong>Enterprise</strong>
+          <div class="muted">SSO/SAML, SCIM, audit logs, priority SLA.</div>
+        </div>
+        <button class="btn" @click=${() => this.setView("contact")}>
+          Contact sales
+        </button>
+      </div>
     `;
   }
 
   private renderContact() {
     return html`
-      <section class="panel card">
-        <h3 style="margin-top:0">Contact</h3>
-        <p class="muted">We’d love to hear from you. Fill the form and we’ll get back.</p>
-        <form style="display:grid; gap:.8rem; max-width:560px">
-          <input placeholder="Your name" style="padding:.8rem .9rem; border:1px solid #e5e7eb; border-radius:12px" />
-          <input placeholder="Your email" type="email" style="padding:.8rem .9rem; border:1px solid #e5e7eb; border-radius:12px" />
-          <textarea rows="5" placeholder="Message" style="padding:.8rem .9rem; border:1px solid #e5e7eb; border-radius:12px"></textarea>
-          <button type="button" style="justify-self:start; padding:.75rem 1rem; border:1px solid #00acc1; background:#00bcd4; color:#fff; border-radius:12px; font-weight:900">Send</button>
-        </form>
-      </section>
+      <div class="panel grid">
+        <h3 style="margin:0">Contact</h3>
+        <p class="muted">We’d love to hear from you.</p>
+        <contact-form email="hello@cluesstack.com"></contact-form>
+      </div>
+    `;
+  }
+
+  private renderAccount() {
+    return html`
+      <div class="panel account-grid">
+        ${this.accountView === "login"
+          ? html`
+              <div class="card">
+                <h3 style="margin:0 0 .4rem 0">Sign in</h3>
+                <p class="muted">Access Workflows and the Community.</p>
+                <login-form
+                  @logged-in=${() => this.setView("workflows")}
+                  @goto-signup=${() => {
+                    this.accountView = "signup";
+                    this.requestUpdate();
+                  }}
+                ></login-form>
+              </div>
+            `
+          : html`
+              <div class="card">
+                <h3 style="margin:0 0 .4rem 0">Create account</h3>
+                <p class="muted">Start free. No credit card required.</p>
+                <signup-form
+                  @goto-login=${() => {
+                    this.accountView = "login";
+                    this.requestUpdate();
+                  }}
+                ></signup-form>
+              </div>
+            `}
+        <div class="card">
+          <h3 style="margin:0 0 .4rem 0">Why create an account?</h3>
+          <ul class="muted">
+            <li>Build and run workflows</li>
+            <li>Fork and publish templates</li>
+            <li>Vote & discuss in community</li>
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderWorkflows() {
+    return html`
+      <div class="panel grid">
+        <h3 style="margin:0">My Workflows</h3>
+        <workflow-list
+          @go=${(e: CustomEvent) => this.setView(e.detail.view as View)}
+          @open-workflow=${(e: CustomEvent) => {
+            this.editingWorkflowId = e.detail.id;
+            this.setView("workflow-edit");
+          }}
+        ></workflow-list>
+        <button class="btn" @click=${() => this.setView("workflow-new")}>
+          New workflow
+        </button>
+      </div>
+    `;
+  }
+
+  private renderWorkflowNew() {
+    return html`
+      <div class="panel grid">
+        <h3 style="margin:0">Create a Workflow</h3>
+        <workflow-builder
+          @saved=${() =>
+            (this as any).renderRoot
+              ?.querySelector("toast-center")
+              ?.show?.("Saved", "ok")}
+        ></workflow-builder>
+      </div>
+    `;
+  }
+
+  private renderWorkflowEdit() {
+    return html`
+      <div class="panel grid">
+        <h3 style="margin:0">Edit Workflow</h3>
+        <workflow-builder
+          .workflowId=${this.editingWorkflowId}
+          @saved=${() =>
+            (this as any).renderRoot
+              ?.querySelector("toast-center")
+              ?.show?.("Saved", "ok")}
+        ></workflow-builder>
+      </div>
     `;
   }
 
   private renderProfile() {
     return html`
-      <auth-guard .allow=${['viewer','author','editor','admin'] as any}>
-        <section class="panel card">
-          <h3 style="margin:0 0 .5rem 0;">User details</h3>
-          <div class="stack">
-            <div><strong>Email:</strong> ${this.email ?? "—"}</div>
-            <div><strong>Role:</strong> ${this.role ?? "—"}</div>
-            <div class="card" style="display:grid; gap:.6rem">
-              <p class="muted" style="margin:0">Manage your session</p>
-              <logout-button @logged-out=${this.handleLoggedOut}></logout-button>
-            </div>
-          </div>
-        </section>
-      </auth-guard>
-    `;
-  }
-
-  private renderWrite() {
-    return html`
-      <auth-guard .allow=${['author','editor','admin'] as any}>
-        <section class="panel card">
-          <h3 style="margin:0 0 .5rem 0;">Write a post</h3>
-          <post-editor @saved=${() => this.toast("Saved", "ok")}></post-editor>
-        </section>
-      </auth-guard>
-    `;
-  }
-
-  private renderAdmin() {
-    return html`
-      <auth-guard .allow=${['admin'] as any}>
-        <section class="panel card">
-          <h3 style="margin:0 0 .5rem 0;">Users & Roles</h3>
-          <admin-users @toast=${(e: CustomEvent) => this.toast(e.detail.text, e.detail.tone)}></admin-users>
-        </section>
-      </auth-guard>
-    `;
-  }
-
-  private renderAssistant() {
-    return html`
-      <section class="panel card">
-        <div class="stack">
-          ${this.messages.map((m) => html`<message-bubble role=${m.role} text=${m.text}></message-bubble>`)}
+      <div class="panel grid">
+        <h3 style="margin:0">User</h3>
+        <div class="card"><strong>Email:</strong> ${this.email ?? "—"}</div>
+        <div class="card"><strong>Role:</strong> ${this.role ?? "—"}</div>
+        <div class="card">
+          <logout-button
+            @logged-out=${() => this.setView("home")}
+          ></logout-button>
         </div>
-      </section>
-      <footer>
-        <chat-input
-          @send=${(e: CustomEvent) => this.addUserText(e.detail.text)}
-          @attach=${(e: CustomEvent) => console.log("files:", e.detail.files)}
-          @record-toggle=${(e: CustomEvent) => console.log("recording:", e.detail.recording)}
-        ></chat-input>
-      </footer>
-    `;
-  }
-
-  private renderInventory() {
-    return html`
-      <section class="panel card">
-        <h3 style="margin:0 0 .5rem 0;">Sample dashboard</h3>
-        <inventory-app></inventory-app>
-      </section>
-      <footer></footer>
-    `;
-  }
-
-  private renderAccount() {
-    const sessionCard = html`
-      <div class="card">
-        <h3 style="margin-top:0">Session</h3>
-        <p class="muted">${this.authed
-          ? html`Signed in as <strong>${this.email ?? "user"}</strong>. You can sign out below.`
-          : "Not signed in."}
-        </p>
-        <logout-button @logged-out=${this.handleLoggedOut}></logout-button>
       </div>
-    `;
-
-    return html`
-      <section class="panel">
-        <div class="account-grid">
-          ${this.authed
-            ? html`${sessionCard}`
-            : this.accountView === "login"
-            ? html`
-                <div class="card">
-                  <h3 style="margin-top:0">Sign in</h3>
-                  <p class="muted">Access author/editor/admin tools.</p>
-                  <login-form
-                    @logged-in=${() => this.setView("blog")}
-                    @goto-signup=${() => { this.accountView = "signup"; this.requestUpdate(); }}>
-                  </login-form>
-                </div>
-                ${sessionCard}
-              `
-            : html`
-                <div class="card">
-                  <h3 style="margin-top:0">Create account</h3>
-                  <p class="muted">New users start as <strong>pending</strong>. An admin will set your role.</p>
-                  <signup-form
-                    @goto-login=${() => { this.accountView = "login"; this.requestUpdate(); }}>
-                  </signup-form>
-                </div>
-                ${sessionCard}
-              `}
-        </div>
-      </section>
     `;
   }
 
   render() {
-    const showDesktopAside =
-      this.authed && this.navOpen && !window.matchMedia("(max-width: 980px)").matches;
-
-    const canWrite = this.authed && ["author", "editor", "admin"].includes(this.role ?? "pending");
-    const isAdmin  = this.authed && this.role === "admin";
-
     return html`
       <top-nav
         .authed=${this.authed}
         .role=${this.role}
-        .view=${this.view}
         .email=${this.email}
-        @navigate=${(e: CustomEvent) => this.onNavigate(e as any)}
-        @signout=${this.onSignout}
+        .view=${this.view}
+        @navigate=${(e: CustomEvent) => this.setView(e.detail.view as View)}
+        @signout=${() => this.setView("home")}
       ></top-nav>
 
-      ${this.authed
-        ? html`
-            <div class="drawer ${this.navOpen ? "" : "hidden"}">
-              <div class="drawer-backdrop" @click=${this.closeNav}></div>
-              <div class="drawer-panel" role="dialog" aria-label="Navigation">
-                <side-nav
-                  .view=${this.view}
-                  .canWrite=${canWrite}
-                  .isAdmin=${isAdmin}
-                  @go=${(e: CustomEvent) => this.setView((e.detail.view as View) ?? "home")}
-                ></side-nav>
-              </div>
-            </div>
-          `
-        : null}
-
-      <div class="shell ${showDesktopAside ? "" : "no-nav"}" @go=${(e: CustomEvent) => this.setView(e.detail.view as View)}>
-        ${showDesktopAside
-          ? html`
-              <aside class="desktop">
-                <side-nav
-                  .view=${this.view}
-                  .canWrite=${canWrite}
-                  .isAdmin=${isAdmin}
-                ></side-nav>
-              </aside>
-            `
-          : null}
-
-        <main>
-          ${this.view === "home"      ? this.renderHome()
-          : this.view === "blog"      ? this.renderBlog()
-          : this.view === "contact"   ? this.renderContact()
-          : this.view === "profile"   ? this.renderProfile()
-          : this.view === "write"     ? this.renderWrite()
-          : this.view === "admin"     ? this.renderAdmin()
-          : this.view === "assistant" ? this.renderAssistant()
-          : this.view === "inventory" ? (this.authed ? this.renderInventory() : this.renderHome())
-          : this.renderAccount()}
-        </main>
+      <div
+        class="shell"
+        @go=${(e: CustomEvent) => this.setView(e.detail.view as View)}
+      >
+        ${this.view === "home"
+          ? this.renderHome()
+          : this.view === "community"
+          ? this.renderCommunity()
+          : this.view === "templates"
+          ? this.renderTemplates()
+          : this.view === "about"
+          ? this.renderAbout()
+          : this.view === "services"
+          ? this.renderServices()
+          : this.view === "contact"
+          ? this.renderContact()
+          : this.view === "account"
+          ? this.renderAccount()
+          : this.view === "workflows"
+          ? this.authed
+            ? this.renderWorkflows()
+            : this.renderAccount()
+          : this.view === "workflow-new"
+          ? this.authed
+            ? this.renderWorkflowNew()
+            : this.renderAccount()
+          : this.view === "workflow-edit"
+          ? this.authed
+            ? this.renderWorkflowEdit()
+            : this.renderAccount()
+          : this.view === "profile"
+          ? this.authed
+            ? this.renderProfile()
+            : this.renderAccount()
+          : this.renderHome()}
       </div>
 
       <toast-center></toast-center>
+      <site-footer></site-footer>
     `;
   }
 }
+
 customElements.define("app-root", AppRoot);

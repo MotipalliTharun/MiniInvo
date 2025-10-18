@@ -1,62 +1,40 @@
-// src/components/logout-button.ts
-import { LitElement, html, css } from "lit";
-import { customElement, state } from "lit/decorators.js";
-import { supabase } from "../lib/supabaseClient";
+import { LitElement, css, html } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
+import { authStore } from '../state/auth';
 
-@customElement("logout-button")
+@customElement('logout-button')
 export class LogoutButton extends LitElement {
   static styles = css`
-    button {
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      border: 1px solid #e5e7eb;
-      background: var(--primary, #00bcd4);
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      width: 100%;
-    }
-
-    button:hover {
-      background: var(--accent, #00acc1);
-      box-shadow: 0 0 12px rgba(0, 188, 212, 0.4);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    :host { display:inline-block }
+    .btn {
+      border:1px solid #00acc1; background:#00bcd4; color:#fff;
+      padding:.6rem .9rem; border-radius:10px; font-weight:900; cursor:pointer;
     }
   `;
 
-  @state() loading = false;
+  @state() busy = false;
+  @state() err = '';
 
-  private async handleLogout() {
-    this.loading = true;
-    const { error } = await supabase.auth.signOut();
-    this.loading = false;
-
-    if (error) {
-      console.error("Logout failed:", error.message);
-      alert("Logout failed: " + error.message);
-      return;
+  private async signout() {
+    this.err = '';
+    this.busy = true;
+    try {
+      await authStore.logout();
+      this.dispatchEvent(new CustomEvent('logged-out', { bubbles: true, composed: true }));
+    } catch (e: any) {
+      this.err = e?.message || 'Logout failed.';
+    } finally {
+      this.busy = false;
     }
-
-    // Emit event for parent components (app-root) to react
-    this.dispatchEvent(new CustomEvent("logged-out", { bubbles: true, composed: true }));
   }
 
   render() {
     return html`
-      <button @click=${this.handleLogout} ?disabled=${this.loading}>
-        ${this.loading ? "Signing out..." : "Sign out"}
+      <button class="btn" ?disabled=${this.busy} @click=${() => this.signout()}>
+        ${this.busy ? 'Signing out…' : 'Logout'}
       </button>
+      ${this.err ? html`<div style="color:#b91c1c; font-size:.9rem; margin-top:.4rem">${this.err}</div>` : ''}
     `;
   }
 }
-
-declare global {
-  interface HTMLElementTagNameMap {
-    "logout-button": LogoutButton;
-  }
-}
+declare global { interface HTMLElementTagNameMap { 'logout-button': LogoutButton } }
